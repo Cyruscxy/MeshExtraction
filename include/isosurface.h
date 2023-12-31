@@ -12,7 +12,7 @@ public:
 	m_scalarFunction(function),
 	m_epsilon(e) {}
 
-	void polygonizeGrid();
+	void polygonizeGridMarchingCubes();
 
 	std::vector<Vec3> m_vertices;
 	std::vector<std::vector<int>> m_indices;

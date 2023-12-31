@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(MeshExtraction LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17) 
 
-set(Eigen3_DIR ${CMAKE_SOURCE_DIR}/../libeigen/share/eigen3/cmake)
+# set(Eigen3_DIR ${CMAKE_SOURCE_DIR}/../libeigen/share/eigen3/cmake)
 find_package(Eigen3 REQUIRED)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/polyscope)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/geometry-central)

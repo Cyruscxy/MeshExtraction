@@ -4,7 +4,7 @@
 
 namespace MarchingCubesConfig
 {
-	constexpr int resolution = 2;
+	constexpr int resolution = 64;
 	constexpr Real begin = -1.0f;
 	constexpr Real end = 1.0f;
 	constexpr Real gridSize = (end - begin) / resolution;
@@ -28,7 +28,7 @@ int MortonEncode(int x, int y, int z)
 	return x | (y << 1) | (z << 2);
 }
 
-void IsoSurface::polygonizeGrid()
+void IsoSurface::polygonizeGridMarchingCubes()
 {
 	using namespace MarchingCubesConfig;
 	int nEdges = resolution * (resolution + 1) * (resolution + 1) * 3;
@@ -57,8 +57,10 @@ void IsoSurface::polygonizeGrid()
 	}
 
 	// calculate vertices resident on every edges
-	std::array<int, 3> idxOffset {1, resolution + 1, (resolution + 1) * (resolution + 1)};
-	std::array<int, 3> dimIdxStride;
+	std::array<int, 3> pointIdxStride{ 1, resolution + 1, (resolution + 1) * (resolution + 1) };
+	std::array<int, 3> edgeIdxStride{ 1, resolution, resolution * (resolution + 1) };
+	std::array<int, 3> pointDimIdxStride;
+	int edgeTableOffset = nEdges / 3;
 	for ( int dim = 0; dim < 3; ++dim ) // x, y, z dim
 	{
 		Vec3 dir;
@@ -67,9 +69,9 @@ void IsoSurface::polygonizeGrid()
 		// when dim is x, j -> y, k -> z
 		// when dim is y, j -> z, k -> x
 		// when dim is z, j -> x, k -> y
-		dimIdxStride[0] = idxOffset[dim];
-		dimIdxStride[1] = idxOffset[(dim + 1) % 3];
-		dimIdxStride[2] = idxOffset[(dim + 2) % 3];
+		pointDimIdxStride[0] = pointIdxStride[dim];
+		pointDimIdxStride[1] = pointIdxStride[(dim + 1) % 3];
+		pointDimIdxStride[2] = pointIdxStride[(dim + 2) % 3];
 
 		Vec3 iOffset, jOffset, kOffset;
 		iOffset[dim] = gridSize;
@@ -88,7 +90,7 @@ void IsoSurface::polygonizeGrid()
 
 				for ( int i = 0; i < resolution; ++i )
 				{
-					int headPointIdx = tailPointIdx + dimIdxStride[0];
+					int headPointIdx = tailPointIdx + pointDimIdxStride[0];
 					Real headVal = gridPointVal[headPointIdx];
 					Vec3 head = tail + iOffset;
 
@@ -99,17 +101,19 @@ void IsoSurface::polygonizeGrid()
 						continue;
 					}
 
-					edgeToVerticesTable[tailPointIdx] = m_vertices.size();
+					int edgeIdx = i * edgeIdxStride[0] + j * edgeIdxStride[1] + k * edgeIdxStride[2];
+					edgeIdx += dim * edgeTableOffset;
+					edgeToVerticesTable[edgeIdx] = m_vertices.size();
 					m_vertices.push_back(lerp(tail, head, tailVal, headVal));
 					tail = head;
 					tailVal = headVal;
 					tailPointIdx = headPointIdx;
 				}
 
-				jIdx += dimIdxStride[1];
+				jIdx += pointDimIdxStride[1];
 			}
 
-			kIdx += dimIdxStride[2];
+			kIdx += pointDimIdxStride[2];
 		}
 	}
 
@@ -129,12 +133,12 @@ void IsoSurface::polygonizeGrid()
 				// get idx of points corresponding to current grid
 				gridPoints[0] = i + j * pointStridePerRow + k * pointStridePerLayer;
 				gridPoints[1] = i + 1 + j * pointStridePerRow + k * pointStridePerLayer;
-				gridPoints[2] = i + (j + 1) * pointStridePerRow + k * pointStridePerLayer;
-				gridPoints[3] = i + 1 + (j + 1) * pointStridePerRow + k * pointStridePerLayer;
+				gridPoints[2] = i + 1 + (j + 1) * pointStridePerRow + k * pointStridePerLayer;
+				gridPoints[3] = i + (j + 1) * pointStridePerRow + k * pointStridePerLayer;
 				gridPoints[4] = i + j * pointStridePerRow + (k + 1) * pointStridePerLayer;
 				gridPoints[5] = i + 1 + j * pointStridePerRow + (k + 1) * pointStridePerLayer;
-				gridPoints[6] = i + (j + 1) * pointStridePerRow + (k + 1) * pointStridePerLayer;
-				gridPoints[7] = i + 1 + (j + 1) * pointStridePerRow + (k + 1) * pointStridePerLayer;
+				gridPoints[6] = i + 1 + (j + 1) * pointStridePerRow + (k + 1) * pointStridePerLayer;
+				gridPoints[7] = i + (j + 1) * pointStridePerRow + (k + 1) * pointStridePerLayer;
 
 				// get idx of edges corresponding to current grid
 				int xStartEdge = i + j * edgeStridePerRow + k * edgeStridePerLayer;
@@ -142,19 +146,19 @@ void IsoSurface::polygonizeGrid()
 				int zStartEdge = k + i * edgeStridePerRow + j * edgeStridePerLayer;
 
 				gridEdges[0] = xStartEdge;
-				gridEdges[1] = yStartEdge + edgeStridePerLayer;
+				gridEdges[1] = yStartEdge + edgeStridePerLayer + edgeTableOffset;
 				gridEdges[2] = xStartEdge + edgeStridePerRow;
-				gridEdges[3] = yStartEdge;
+				gridEdges[3] = yStartEdge + edgeTableOffset;
 
 				gridEdges[4] = xStartEdge + edgeStridePerLayer;
-				gridEdges[5] = yStartEdge + edgeStridePerLayer + edgeStridePerRow;
+				gridEdges[5] = yStartEdge + edgeStridePerLayer + edgeStridePerRow + edgeTableOffset;
 				gridEdges[6] = xStartEdge + edgeStridePerLayer + edgeStridePerRow;
-				gridEdges[7] = yStartEdge + edgeStridePerRow;
+				gridEdges[7] = yStartEdge + edgeStridePerRow + edgeTableOffset;
 
-				gridEdges[8] = zStartEdge;
-				gridEdges[9] = zStartEdge + edgeStridePerRow;
-				gridEdges[10] = zStartEdge + edgeStridePerRow + edgeStridePerLayer;
-				gridEdges[11] = zStartEdge + edgeStridePerLayer;
+				gridEdges[8] = zStartEdge + edgeTableOffset * 2;
+				gridEdges[9] = zStartEdge + edgeStridePerRow + edgeTableOffset * 2;
+				gridEdges[10] = zStartEdge + edgeStridePerRow + edgeStridePerLayer + edgeTableOffset * 2;
+				gridEdges[11] = zStartEdge + edgeStridePerLayer + edgeTableOffset * 2;
 
 				// compute cube index to find grid state
 				int cubeIdx = 0;

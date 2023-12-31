@@ -12,8 +12,15 @@ int main()
 		return v.norm2() - 0.5f;
 	};
 
-	IsoSurface surface(sphere, 1e-4f);
-	surface.polygonizeGrid();
+	std::function<Real(const Vec3& v)> crazyFunction;
+	crazyFunction = [](const Vec3& v) -> Real
+	{
+		auto P = v * 3.0f;
+		return sinf(P.x * P.y + P.x * P.z + P.y * P.z) + sinf(P.x * P.y) + sinf(P.y * P.z) + sinf(P.x * P.z) - 1.0f;
+	};
+
+	IsoSurface surface(crazyFunction, 1e-4f);
+	surface.polygonizeGridMarchingCubes();
 
 	polyscope::init();
 
