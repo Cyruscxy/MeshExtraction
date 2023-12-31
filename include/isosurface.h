@@ -14,9 +14,10 @@ public:
 
 	void polygonizeGrid();
 
-private:
 	std::vector<Vec3> m_vertices;
-	std::vector<int> m_indices;
+	std::vector<std::vector<int>> m_indices;
+
+private:
 	std::vector<Real> m_value;
 	std::function<Real(const Vec3& v)> m_scalarFunction;
 	Real m_epsilon;

@@ -4,7 +4,7 @@
 
 namespace MarchingCubesConfig
 {
-	constexpr int resolution = 64;
+	constexpr int resolution = 2;
 	constexpr Real begin = -1.0f;
 	constexpr Real end = 1.0f;
 	constexpr Real gridSize = (end - begin) / resolution;
@@ -166,14 +166,12 @@ void IsoSurface::polygonizeGrid()
 				if (edgeTable[cubeIdx] == 0) continue;
 
 				char* state = triTable[cubeIdx];
-				for ( int eid = 0; state[eid] != 0; eid += 3 )
+				for ( int eid = 0; state[eid] != -1; eid += 3 )
 				{
 					int vid0 = edgeToVerticesTable[gridEdges[state[eid]]];
 					int vid1 = edgeToVerticesTable[gridEdges[state[eid + 1]]];
 					int vid2 = edgeToVerticesTable[gridEdges[state[eid + 2]]];
-					m_indices.push_back(vid0);
-					m_indices.push_back(vid1);
-					m_indices.push_back(vid2);
+					m_indices.push_back({vid0, vid1, vid2});
 				}
 			}
 		}
