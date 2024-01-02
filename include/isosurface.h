@@ -8,18 +8,18 @@ class IsoSurface
 {
 public:
 	IsoSurface() = default;
-	IsoSurface(std::function<Real(const Vec3& v)>& function, Real e) :
-	m_scalarFunction(function),
+	IsoSurface(std::function<Real(const Vec3& v)>& scalarFunction, std::function<Vec3(const Vec3& v)>& normalFunction, Real e) :
+	m_scalarFunction(scalarFunction),
+	m_normalFunction(normalFunction),
 	m_epsilon(e) {}
 
-	void polygonizeGridMarchingCubes();
-
-	std::vector<Vec3> m_vertices;
-	std::vector<std::vector<int>> m_indices;
+	Real operator()(const Vec3& v) { return m_scalarFunction(v); }
+	Vec3 normalAt(const Vec3& v) { return m_normalFunction(v); }
 
 private:
 	std::vector<Real> m_value;
 	std::function<Real(const Vec3& v)> m_scalarFunction;
+	std::function<Vec3(const Vec3& v)> m_normalFunction;
 	Real m_epsilon;
 };
 

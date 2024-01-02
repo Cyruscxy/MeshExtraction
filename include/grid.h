@@ -3,6 +3,9 @@
 
 #include "math/vec.h"
 #include <array>
+#include <vector>
+#include <functional>
+#include <Eigen/Sparse>
 
 struct Grid
 {
@@ -14,6 +17,29 @@ struct Grid
 		{4, 5}, {5, 6}, {6, 7}, {7, 4},
 		{0, 4}, {1, 5}, {2, 6}, {3, 7},
 	} };
+};
+
+struct Cells
+{
+	Cells(Real begin, Real end, int resolution):
+	m_begin(begin),
+	m_end(end),
+	m_resolution(resolution),
+	m_gridSize((end - begin) / resolution),
+	m_pointVal((resolution + 1) * (resolution + 1) * (resolution + 1)) {}
+
+	void marchingCubes(std::function<Real(const Vec3&)> SDF, std::vector<Vec3>& vertices, std::vector<std::vector<int>>& faces);
+
+	void calculateGridPointVal(std::function<Real(const Vec3&)> SDF);
+	void calculateIntersection(std::vector<Vec3>& vertices, Eigen::SparseVector<int>& edgeToVerticesTable);
+	void calculateTopology(Eigen::SparseVector<int>& edgeToVerticesTable, std::vector<std::vector<int>>& faces);
+
+
+	Real m_begin;
+	Real m_end;
+	int m_resolution;
+	Real m_gridSize;
+	std::vector<Real> m_pointVal;
 };
 
 #endif
