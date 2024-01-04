@@ -168,3 +168,75 @@ void Cells::calculateTopology(Eigen::SparseVector<int>& edgeToVerticesTable, std
 		}
 	}
 }
+
+void Cells::calculateIntersection(std::vector<Vec3>& intersections, std::vector<Vec3>& normals, std::function<Vec3(const Vec3&)>& normalAt, Eigen::SparseVector<int>& edgeToVertexTable)
+{
+	int edgeTableOffset = m_resolution * (m_resolution + 1) * (m_resolution + 1);
+
+	std::array<int, 3> pointIdxStride{ 1, m_resolution + 1, (m_resolution + 1) * (m_resolution + 1) };
+	std::array<int, 3> edgeIdxStride{ 1, m_resolution, m_resolution * (m_resolution + 1) };
+	std::array<int, 3> pointDimIdxStride;
+
+	for (int dim = 0; dim < 3; ++dim) // x, y, z dim
+	{
+		Vec3 dir;
+		dir[dim] = m_gridSize;
+
+		// when dim is x, j -> y, k -> z
+		// when dim is y, j -> z, k -> x
+		// when dim is z, j -> x, k -> y
+		pointDimIdxStride[0] = pointIdxStride[dim];
+		pointDimIdxStride[1] = pointIdxStride[(dim + 1) % 3];
+		pointDimIdxStride[2] = pointIdxStride[(dim + 2) % 3];
+
+		Vec3 iOffset, jOffset, kOffset;
+		iOffset[dim] = m_gridSize;
+		jOffset[(dim + 1) % 3] = m_gridSize;
+		kOffset[(dim + 2) % 3] = m_gridSize;
+
+		int kIdx = 0;
+		for (int k = 0; k < m_resolution + 1; ++k)
+		{
+			int jIdx = 0;
+			for (int j = 0; j < m_resolution + 1; ++j)
+			{
+				int tailPointIdx = jIdx + kIdx;
+				Real tailVal = m_pointVal[tailPointIdx];
+				Vec3 tail = Vec3(m_begin) + jOffset * j + kOffset * k;
+
+				for (int i = 0; i < m_resolution; ++i)
+				{
+					int headPointIdx = tailPointIdx + pointDimIdxStride[0];
+					Real headVal = m_pointVal[headPointIdx];
+					Vec3 head = tail + iOffset;
+
+					if (headVal * tailVal > 0) {
+						tail = head;
+						tailVal = headVal;
+						tailPointIdx = headPointIdx;
+						continue;
+					}
+
+					int edgeIdx = i * edgeIdxStride[0] + j * edgeIdxStride[1] + k * edgeIdxStride[2];
+					edgeIdx += dim * edgeTableOffset;
+					edgeToVertexTable.insert(edgeIdx) = intersections.size();
+					intersections.push_back(lerp(tail, head, tailVal, headVal));
+					normals.push_back(normalAt(intersections.back()));
+					tail = head;
+					tailVal = headVal;
+					tailPointIdx = headPointIdx;
+				}
+
+				jIdx += pointDimIdxStride[1];
+			}
+
+			kIdx += pointDimIdxStride[2];
+		}
+	}
+}
+
+void Cells::calculateVertices(std::vector<Vec3>& intersections, std::vector<Vec3>& normals, Eigen::SparseVector<int>& edgeToVertexTable, std::vector<Vec3>& vertices)
+{
+	
+}
+
