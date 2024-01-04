@@ -193,7 +193,7 @@ void Cells::dualContouring(IsoSurface& surface, std::vector<Vec3>& vertices, std
 	edgeToVertexTable.resize(nEdges);
 	gridToVertexTable.resize(nGrids);
 
-	std::vector<Vec3> intersections;
+	std::vector<Vec2> intersections;
 	std::vector<Vec3> normals;
 
 	this->calculateGridPointVal(surface);
@@ -211,7 +211,7 @@ void Cells::dualContouring(IsoSurface& surface, std::vector<Vec3>& vertices, std
 
 
 void Cells::calculateIntersection(
-	std::vector<Vec3>& intersections, 
+	std::vector<Vec2>& intersections, 
 	std::vector<Vec3>& normals, 
 	std::vector<std::vector<int>>& faces, 
 	std::function<Vec3(const Vec3&)> normalAt, 
@@ -273,8 +273,9 @@ void Cells::calculateIntersection(
 					int edgeIdx = i * edgeIdxStride[0] + j * edgeIdxStride[1] + k * edgeIdxStride[2];
 					edgeIdx += dim * edgeTableOffset;
 					edgeToVertexTable.insert(edgeIdx) = intersections.size();
-					intersections.push_back(lerp(tail, head, tailVal, headVal));
-					normals.push_back(normalAt(intersections.back()));
+					auto inteVert = lerp(tail, head, tailVal, headVal);
+					intersections.emplace_back(tailVal, headVal);
+					normals.push_back(normalAt(inteVert));
 					tail = head;
 					tailVal = headVal;
 					tailPointIdx = headPointIdx;
@@ -329,7 +330,7 @@ void Cells::calculateIntersection(
 }
 
 void Cells::calculateVertices(
-	std::vector<Vec3>& intersections, 
+	std::vector<Vec2>& intersections, 
 	std::vector<Vec3>& normals, 
 	Eigen::SparseVector<int>& edgeToVertexTable, 
 	std::vector<Vec3>& vertices,
@@ -337,6 +338,23 @@ void Cells::calculateVertices(
 )
 {
 	Eigen::SparseMatrix<Real> mat(3, 3);
+
+	const Vec3 cube[8] = {
+		{-1.0f, -1.0f, -1.0f},
+		{ 1.0f, -1.0f, -1.0f},
+		{ 1.0f,  1.0f, -1.0f},
+		{-1.0f,  1.0f, -1.0f},
+		{-1.0f, -1.0f,  1.0f},
+		{ 1.0f, -1.0f,  1.0f},
+		{ 1.0f,  1.0f,  1.0f},
+		{ 1.0f,  1.0f,  1.0f}
+	};
+
+	constexpr std::pair<int, int> edgeIdx[12] = {
+		{0, 1}, {1, 2}, {2, 3}, {3, 0},
+		{4, 5}, {5, 6}, {6, 7}, {7, 4},
+		{0, 4}, {1, 5}, {2, 6}, {3, 7}
+	};
 
 	int edgeTableOffset = m_resolution * (m_resolution + 1) * (m_resolution + 1);
 	int edgeStridePerLayer = m_resolution * (m_resolution + 1);
@@ -391,21 +409,25 @@ void Cells::calculateVertices(
 
 				if (edgeTable[cubeIdx] == 0) continue;
 				char* state = triTable[cubeIdx];
-				std::set<int> intersectionEdges;
+				std::set<std::pair<int, int>> intersectionEdges;
 				for (int eid = 0; state[eid] != -1; eid += 1)
 				{
-					intersectionEdges.insert(edgeToVertexTable.coeff(gridEdges[state[eid]]));
+					intersectionEdges.insert({ state[eid], edgeToVertexTable.coeff(gridEdges[state[eid]]) });
 				}
-
+				
 				Eigen::SparseMatrix<Real> A(intersectionEdges.size(), 3);
 				Eigen::SparseMatrix<Real> b(intersectionEdges.size(), 1);
 				int idx = 0;
 				std::vector<Eigen::Triplet<Real>> coeff;
 				std::vector<Eigen::Triplet<Real>> bCoeff;
-				for ( auto eid : intersectionEdges )
+				for ( auto [cubeEdgeIdx, globalEdgeIdx] : intersectionEdges )
 				{
-					Vec3& normal = normals[eid];
-					Vec3& point = intersections[eid];
+					Vec3& normal = normals[globalEdgeIdx];
+					Vec2& weight = intersections[globalEdgeIdx];
+					const Vec3& tail = cube[edgeIdx[cubeEdgeIdx].first];
+					const Vec3& head = cube[edgeIdx[cubeEdgeIdx].second];
+					Vec3 point = lerp(tail, head, weight[0], weight[1]);
+
 					coeff.emplace_back(idx, 0, normal.x);
 					coeff.emplace_back(idx, 1, normal.y);
 					coeff.emplace_back(idx, 2, normal.z);
@@ -418,16 +440,16 @@ void Cells::calculateVertices(
 				mat = A.transpose() * A;
 				Eigen::SparseVector<Real> rhs = A.transpose() * b;
 				Eigen::Matrix<Real, Eigen::Dynamic, 1> vert;
-				printSparseMatrix(mat);
-				printSparseMatrix(rhs);
-				std::cout << std::endl;
 
 				geometrycentral::Solver<Real> solver(mat);
 				solver.solve(vert, rhs);
 				// gridToVertexCoeff.emplace_back(i + j * m_resolution + k * m_resolution * m_resolution, 0, vertices.size()) ;
 				int gridIdx = i + j * m_resolution + k * m_resolution * m_resolution;
 				gridToVertexTable.insert(gridIdx) = vertices.size();
-				vertices.emplace_back(vert[0], vert[1], vert[2]);
+				Vec3 offset(vert[0], vert[1], vert[2]);
+				offset *= m_gridSize / 2;
+				offset += (Vec3(i, j, k) + Vec3(0.5f)) * m_gridSize;
+				vertices.push_back(offset);
 			}
 		}
 	}
