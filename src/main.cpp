@@ -28,7 +28,7 @@ int main()
 	std::function<Real(const Vec3& v)> cube;
 	cube = [](const Vec3& v) -> Real
 	{
-		Vec3 p = v.habs() - Vec3(0.5f);
+		Vec3 p = v.habs() - Vec3(0.6f);
 		return std::max(p.x, std::max(p.y, p.z));
 	};
 	std::function<Vec3(const Vec3& v)> cubeNormal;
@@ -61,7 +61,7 @@ int main()
 
 	polyscope::init();
 
-	// auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, indices);
+	//auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, indices);
 
 	auto handle = polyscope::registerCurveNetwork("Sphere", vertices, edges);
 

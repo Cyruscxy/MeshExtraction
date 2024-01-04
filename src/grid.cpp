@@ -418,6 +418,9 @@ void Cells::calculateVertices(
 				mat = A.transpose() * A;
 				Eigen::SparseVector<Real> rhs = A.transpose() * b;
 				Eigen::Matrix<Real, Eigen::Dynamic, 1> vert;
+				printSparseMatrix(mat);
+				printSparseMatrix(rhs);
+				std::cout << std::endl;
 
 				geometrycentral::Solver<Real> solver(mat);
 				solver.solve(vert, rhs);
