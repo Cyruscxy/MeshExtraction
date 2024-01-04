@@ -12,6 +12,11 @@ int main()
 	{
 		return v.norm2() - 0.5f;
 	};
+	std::function<Vec3(const Vec3& v)> sphereNormal;
+	sphereNormal = [](const Vec3& v) -> Vec3
+	{
+		return normalize(v);
+	};
 
 	std::function<Real(const Vec3& v)> crazyFunction;
 	crazyFunction = [](const Vec3& v) -> Real
@@ -36,16 +41,29 @@ int main()
 		return Vec3(0.0f, 0.0f, 1.0f);
 	};
 
+	// IsoSurface surface(sphere, sphereNormal, 1e-4f);
 	IsoSurface surface(cube, cubeNormal, 1e-4f);
-	Cells cells(-1.0f, 1.0f, 64);
+	Cells cells(-1.0f, 1.0f, 4);
 	std::vector<Vec3> vertices;
 	std::vector<std::vector<int>> indices;
-	cells.marchingCubes(surface, vertices, indices);
+	// cells.marchingCubes(surface, vertices, indices);
+	cells.dualContouring(surface, vertices, indices);
 	// surface.polygonizeGridMarchingCubes();
+
+	std::vector<std::array<int, 2>> edges;
+	for ( auto& face : indices )
+	{
+		for ( int i = 0; i < face.size(); ++i )
+		{
+			edges.push_back({ face[i], face[(i + 1) % face.size()] });
+		}
+	}
 
 	polyscope::init();
 
-	auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, indices);
+	// auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, indices);
+
+	auto handle = polyscope::registerCurveNetwork("Sphere", vertices, edges);
 
 	polyscope::show();
 

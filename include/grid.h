@@ -34,12 +34,13 @@ struct Cells
 	void calculateIntersection(std::vector<Vec3>& vertices, Eigen::SparseVector<int>& edgeToVertexTable);
 	void calculateTopology(Eigen::SparseVector<int>& edgeToVerticesTable, std::vector<std::vector<int>>& faces);
 
-	void dualContouring(IsoSurface& suface, std::vector<Vec3>& vertices, std::vector<std::vector<int>>& faces);
+	void dualContouring(IsoSurface& surface, std::vector<Vec3>& vertices, std::vector<std::vector<int>>& faces);
 
-	void calculateIntersection(std::vector<Vec3>& intersections, std::vector<Vec3>& normals, 
-		std::function<Vec3(const Vec3&)>& normalAt, Eigen::SparseVector<int>& edgeToVertexTable);
-	void calculateVertices(std::vector<Vec3>& intersections, std::vector<Vec3>& normals,
-		Eigen::SparseVector<int>& edgeToVertexTable, std::vector<Vec3>& vertices);
+	void calculateIntersection(std::vector<Vec3>& intersections, std::vector<Vec3>& normals, std::vector<std::vector<int>>& faces,
+		std::function<Vec3(const Vec3&)> normalAt, Eigen::SparseVector<int>& edgeToVertexTable);
+	void calculateVertices(std::vector<Vec3>& intersections, std::vector<Vec3>& normals, Eigen::SparseVector<int>& edgeToVertexTable, 
+		std::vector<Vec3>& vertices, Eigen::SparseVector<int>& gridToVertexTable);
+	void calculateTopologyDualContouring(Eigen::SparseVector<int>& gridToVertexTable, std::vector<std::vector<int>>& faces);
 
 	Real m_begin;
 	Real m_end;
