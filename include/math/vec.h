@@ -116,6 +116,31 @@ struct Vec3
 	CUDA_CALLABLE inline Real norm2() const { return x * x + y * y + z * z; }
 	CUDA_CALLABLE inline Real norm() const { return sqrt(norm2()); }
 	CUDA_CALLABLE inline Vec3 habs() const { return Vec3(abs(x), abs(y), abs(z)); }
+	CUDA_CALLABLE inline Vec3 sign() const
+	{
+		Vec3 result;
+		if constexpr (sizeof(Real) == 4)
+		{
+			for ( int idx = 0; idx < 3; ++idx )
+			{
+				Real value = (*this)[idx];
+				uint32_t* binaryPtr = reinterpret_cast<uint32_t*>(&value);
+				uint32_t binary = ((*binaryPtr) & (1u << 31)) | 0x3f800000u;
+				result[idx] = *reinterpret_cast<Real*>(&binary);
+			}
+		}
+		else
+		{
+			for (int idx = 0; idx < 3; ++idx)
+			{
+				Real value = (*this)[idx];
+				uint64_t* binaryPtr = reinterpret_cast<uint64_t*>(&value);
+				uint64_t binary = ((*binaryPtr) & (1u << 63)) | 0x3ff0000000000000u;
+				result[idx] = *reinterpret_cast<Real*>(&binary);
+			}
+		}
+		return result;
+	}
 
 	Real x, y, z;
 };

@@ -36,14 +36,14 @@ int main()
 	{
 		Vec3 p = v.habs();
 		Real distance = std::max(std::max(p.x, p.y), p.z);
-		if (distance == p.x) return Vec3(1.0f, 0.0f, 0.0f);
-		if (distance == p.y) return Vec3(0.0f, 1.0f, 0.0f);
-		return Vec3(0.0f, 0.0f, 1.0f);
+		if (distance == p.x) return Vec3(1.0f, 0.0f, 0.0f) * v.sign();
+		if (distance == p.y) return Vec3(0.0f, 1.0f, 0.0f) * v.sign();
+		return Vec3(0.0f, 0.0f, 1.0f) * v.sign();
 	};
 
-	// IsoSurface surface(sphere, sphereNormal, 1e-4f);
+	//IsoSurface surface(sphere, sphereNormal, 1e-4f);
 	IsoSurface surface(cube, cubeNormal, 1e-4f);
-	Cells cells(-1.0f, 1.0f, 4);
+	Cells cells(-1.0f, 1.0f, 2);
 	std::vector<Vec3> vertices;
 	std::vector<std::vector<int>> indices;
 	// cells.marchingCubes(surface, vertices, indices);

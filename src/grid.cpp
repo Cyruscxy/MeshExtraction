@@ -347,7 +347,7 @@ void Cells::calculateVertices(
 		{-1.0f, -1.0f,  1.0f},
 		{ 1.0f, -1.0f,  1.0f},
 		{ 1.0f,  1.0f,  1.0f},
-		{ 1.0f,  1.0f,  1.0f}
+		{-1.0f,  1.0f,  1.0f}
 	};
 
 	constexpr std::pair<int, int> edgeIdx[12] = {
@@ -436,9 +436,17 @@ void Cells::calculateVertices(
 				}
 				A.setFromTriplets(coeff.begin(), coeff.end());
 				b.setFromTriplets(bCoeff.begin(), bCoeff.end());
+				printSparseMatrix(A);
+				std::cout << std::endl;
+				printSparseMatrix(b);
+				std::cout << std::endl;
 
 				mat = A.transpose() * A;
+				printSparseMatrix(mat);
+				std::cout << std::endl;
 				Eigen::SparseVector<Real> rhs = A.transpose() * b;
+				printSparseMatrix(rhs);
+				std::cout << std::endl;
 				Eigen::Matrix<Real, Eigen::Dynamic, 1> vert;
 
 				geometrycentral::Solver<Real> solver(mat);
@@ -448,7 +456,7 @@ void Cells::calculateVertices(
 				gridToVertexTable.insert(gridIdx) = vertices.size();
 				Vec3 offset(vert[0], vert[1], vert[2]);
 				offset *= m_gridSize / 2;
-				offset += (Vec3(i, j, k) + Vec3(0.5f)) * m_gridSize;
+				offset += (Vec3(i, j, k) + Vec3(0.5f)) * m_gridSize + Vec3(m_begin);
 				vertices.push_back(offset);
 			}
 		}
