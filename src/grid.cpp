@@ -351,8 +351,8 @@ void Cells::calculateVertices(
 	};
 
 	constexpr std::pair<int, int> edgeIdx[12] = {
-		{0, 1}, {1, 2}, {2, 3}, {3, 0},
-		{4, 5}, {5, 6}, {6, 7}, {7, 4},
+		{0, 1}, {1, 2}, {3, 2}, {0, 3},
+		{4, 5}, {5, 6}, {7, 6}, {4, 7},
 		{0, 4}, {1, 5}, {2, 6}, {3, 7}
 	};
 
@@ -436,17 +436,9 @@ void Cells::calculateVertices(
 				}
 				A.setFromTriplets(coeff.begin(), coeff.end());
 				b.setFromTriplets(bCoeff.begin(), bCoeff.end());
-				printSparseMatrix(A);
-				std::cout << std::endl;
-				printSparseMatrix(b);
-				std::cout << std::endl;
 
 				mat = A.transpose() * A;
-				printSparseMatrix(mat);
-				std::cout << std::endl;
 				Eigen::SparseVector<Real> rhs = A.transpose() * b;
-				printSparseMatrix(rhs);
-				std::cout << std::endl;
 				Eigen::Matrix<Real, Eigen::Dynamic, 1> vert;
 
 				geometrycentral::Solver<Real> solver(mat);

@@ -41,9 +41,9 @@ int main()
 		return Vec3(0.0f, 0.0f, 1.0f) * v.sign();
 	};
 
-	//IsoSurface surface(sphere, sphereNormal, 1e-4f);
-	IsoSurface surface(cube, cubeNormal, 1e-4f);
-	Cells cells(-1.0f, 1.0f, 2);
+	IsoSurface surface(sphere, sphereNormal, 1e-4f);
+	//IsoSurface surface(cube, cubeNormal, 1e-4f);
+	Cells cells(-1.0f, 1.0f, 4);
 	std::vector<Vec3> vertices;
 	std::vector<std::vector<int>> indices;
 	// cells.marchingCubes(surface, vertices, indices);
