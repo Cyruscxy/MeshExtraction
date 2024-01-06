@@ -27,6 +27,7 @@ struct Cells
 	m_end(end),
 	m_resolution(resolution),
 	m_gridSize((end - begin) / resolution),
+	m_epsilon(1e-4f),
 	m_pointVal((resolution + 1) * (resolution + 1) * (resolution + 1)) {}
 
 	void marchingCubes(std::function<Real(const Vec3&)> SDF, std::vector<Vec3>& vertices, std::vector<std::vector<int>>& faces);
@@ -46,6 +47,7 @@ struct Cells
 	Real m_end;
 	int m_resolution;
 	Real m_gridSize;
+	Real m_epsilon;
 	std::vector<Real> m_pointVal;
 };
 

@@ -338,7 +338,6 @@ void Cells::calculateVertices(
 	Eigen::SparseVector<int>& gridToVertexTable
 )
 {
-	Eigen::SparseMatrix<Real> mat(3, 3);
 
 	const Vec3 cube[8] = {
 		{-1.0f, -1.0f, -1.0f},
@@ -432,21 +431,29 @@ void Cells::calculateVertices(
 					coeff.emplace_back(idx, 0, normal.x);
 					coeff.emplace_back(idx, 1, normal.y);
 					coeff.emplace_back(idx, 2, normal.z);
-					bCoeff.emplace_back(idx, 0, dot(normal, point));
+					Real nDotP = dot(normal, point);
+					bCoeff.emplace_back(idx, 0, nDotP);
 					idx += 1;
 				}
 				A.setFromTriplets(coeff.begin(), coeff.end());
 				b.setFromTriplets(bCoeff.begin(), bCoeff.end());
 
+				Eigen::SparseMatrix<Real> mat(3, 3);
 				mat = A.transpose() * A;
 				Eigen::SparseVector<Real> rhs = A.transpose() * b;
 				Eigen::Matrix<Real, Eigen::Dynamic, 1> vert;
 
 				geometrycentral::Solver<Real> solver(mat);
+				//geometrycentral::SquareSolver<Real> solver(A);
 				solver.solve(vert, rhs);
 				// gridToVertexCoeff.emplace_back(i + j * m_resolution + k * m_resolution * m_resolution, 0, vertices.size()) ;
 				int gridIdx = i + j * m_resolution + k * m_resolution * m_resolution;
 				gridToVertexTable.insert(gridIdx) = vertices.size();
+				/*Vec3 offset(
+					 std::clamp(vert[0], -1.0f + m_epsilon, 1.0f - m_epsilon),
+					 std::clamp(vert[1], -1.0f + m_epsilon, 1.0f - m_epsilon),
+					 std::clamp(vert[2], -1.0f + m_epsilon, 1.0f - m_epsilon)
+				);*/
 				Vec3 offset(vert[0], vert[1], vert[2]);
 				offset *= m_gridSize / 2;
 				offset += (Vec3(i, j, k) + Vec3(0.5f)) * m_gridSize + Vec3(m_begin);

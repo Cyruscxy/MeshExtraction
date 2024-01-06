@@ -10,7 +10,7 @@ int main()
 	std::function<Real(const Vec3& v)> sphere;
 	sphere = [](const Vec3& v) -> Real
 	{
-		return v.norm2() - 0.3f;
+		return v.norm2() - 0.6f;
 	};
 	std::function<Vec3(const Vec3& v)> sphereNormal;
 	sphereNormal = [](const Vec3& v) -> Vec3
@@ -43,25 +43,35 @@ int main()
 
 	IsoSurface surface(sphere, sphereNormal, 1e-4f);
 	//IsoSurface surface(cube, cubeNormal, 1e-4f);
-	Cells cells(-1.0f, 1.0f, 4);
+	Cells cells(-1.0f, 1.0f, 32);
 	std::vector<Vec3> vertices;
 	std::vector<std::vector<int>> indices;
 	// cells.marchingCubes(surface, vertices, indices);
 	cells.dualContouring(surface, vertices, indices);
 	// surface.polygonizeGridMarchingCubes();
 
+	std::vector<std::vector<int>> subset;
+	subset.push_back(indices[694]);
+	subset.push_back(indices[1011]);
+	subset.push_back(indices[2621]);
+
 	std::vector<std::array<int, 2>> edges;
-	for ( auto& face : indices )
+	/*for ( auto& face : subset )
 	{
 		for ( int i = 0; i < face.size(); ++i )
 		{
 			edges.push_back({ face[i], face[(i + 1) % face.size()] });
 		}
+	}*/
+	for (int i = 0; i < subset[0].size(); ++i)
+	{
+		edges.push_back({ subset[0][i], subset[0][(i + 1) % subset[0].size()]});
 	}
+
 
 	polyscope::init();
 
-	//auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, indices);
+	//auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, subset);
 
 	auto handle = polyscope::registerCurveNetwork("Sphere", vertices, edges);
 
