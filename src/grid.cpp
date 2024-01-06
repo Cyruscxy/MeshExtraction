@@ -4,6 +4,7 @@
 #include <Eigen/Sparse>
 #include <geometrycentral/numerical/linear_solvers.h>
 #include <iostream>
+#include <algorithm>
 
 void printSparseMatrix(const Eigen::SparseMatrix<Real>& mat)
 {
@@ -457,12 +458,55 @@ void Cells::calculateVertices(
 
 void Cells::calculateTopologyDualContouring(Eigen::SparseVector<int>& gridToVertexTable, std::vector<std::vector<int>>& faces)
 {
+	std::vector<char> facesMask;
 	for ( auto& face : faces )
 	{
+		std::set<int> verticesCount;
+		facesMask.push_back(0);
 		for ( auto& idx : face )
 		{
 			idx = gridToVertexTable.coeff(idx, 0);
+			if ( verticesCount.find(idx) != verticesCount.end() )
+			{
+				facesMask.back() = 1;
+			}
+			else
+			{
+				verticesCount.insert(idx);
+			}
 		}
 	}
+
+	// cull invalid faces
+	int head = 0;
+	int tail = facesMask.size() - 1;
+	auto headMarching = [&facesMask, &head]()
+	{
+		for (; head < facesMask.size(); ++head)
+		{
+			if (facesMask[head] == 1) break;
+		}
+	};
+	auto tailMarching = [&facesMask, &tail]()
+	{
+		for (; tail >= 0; --tail)
+		{
+			if (facesMask[tail] == 0) break;
+		}
+	};
+	headMarching();
+	tailMarching();
+
+	while ( tail > head )
+	{
+		std::iter_swap(faces.begin() + head, faces.begin() + tail);
+		facesMask[head] = 0;
+		facesMask[tail] = 1;
+		headMarching();
+		tailMarching();
+	}
+
+	int nValidFaces = tail + 1;
+	if (nValidFaces < faces.size()) faces.resize(nValidFaces);
 }
 

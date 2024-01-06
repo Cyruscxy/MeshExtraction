@@ -10,7 +10,7 @@ int main()
 	std::function<Real(const Vec3& v)> sphere;
 	sphere = [](const Vec3& v) -> Real
 	{
-		return v.norm2() - 0.5f;
+		return v.norm2() - 0.3f;
 	};
 	std::function<Vec3(const Vec3& v)> sphereNormal;
 	sphereNormal = [](const Vec3& v) -> Vec3
