@@ -7,8 +7,8 @@
 
 enum OctreeNodeType
 {
-	LEAF_NODE,
-	INTERN_NODE
+	INTERNAL_NODE = 0,
+	LEAF_NODE = 1
 };
 
 class OctreeNodeBase
@@ -18,17 +18,15 @@ public:
 	virtual ~OctreeNodeBase() = default;
 	virtual OctreeNodeType getType() = 0;
 
-	void calculateCubeIdx(const std::function<Real(const Vec3&)>& sdf);
-
 private:
 	// helper function
 	std::array<Vec3, 8> genPoints();
+	void calculateCubeIdx(const std::function<Real(const Vec3&)>& sdf);
 
 private:
-	Vec3 m_min;
-	Vec3 m_max;
+	std::array<Vec3, 2> m_diagPoint; // {vmin, vmax}
 	std::array<Real, 8> m_pointVal;
-	int m_cubeIdx;
+	char m_cubeIdx;
 };
 
 class LeafNode: public OctreeNodeBase
@@ -40,9 +38,6 @@ public:
 	OctreeNodeType getType() override { return LEAF_NODE; }
 
 private:
-	Vec3 m_min;
-	Vec3 m_max;
-	int m_cubeIdx;
 };
 
 class Octree

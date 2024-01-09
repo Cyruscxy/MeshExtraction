@@ -71,9 +71,9 @@ int main()
 
 	polyscope::init();
 
-	//auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, subset);
+	auto handle = polyscope::registerSurfaceMesh("Sphere", vertices, subset);
 
-	auto handle = polyscope::registerCurveNetwork("Sphere", vertices, edges);
+	//auto handle = polyscope::registerCurveNetwork("Sphere", vertices, edges);
 
 	polyscope::show();
 
