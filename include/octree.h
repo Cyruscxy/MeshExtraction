@@ -4,6 +4,7 @@
 #include "math/vec.h"
 #include <functional>
 #include <array>
+#include <memory>
 
 enum OctreeNodeType
 {
@@ -11,7 +12,7 @@ enum OctreeNodeType
 	LEAF_NODE = 1
 };
 
-class OctreeNodeBase
+struct OctreeNodeBase
 {
 public:
 	OctreeNodeBase() = default;
@@ -20,16 +21,16 @@ public:
 
 private:
 	// helper function
-	std::array<Vec3, 8> genPoints();
+	static std::array<Vec3, 8> genPoints(const std::array<Vec3, 2>&  diagPoint);
 	void calculateCubeIdx(const std::function<Real(const Vec3&)>& sdf);
 
 private:
 	std::array<Vec3, 2> m_diagPoint; // {vmin, vmax}
-	std::array<Real, 8> m_pointVal;
+	// std::array<Real, 8> m_pointVal;
 	char m_cubeIdx;
 };
 
-class LeafNode: public OctreeNodeBase
+struct LeafNode: public OctreeNodeBase
 {
 public:
 	LeafNode(const Vec3& vMin, const Vec3& vMax);
@@ -40,9 +41,16 @@ public:
 private:
 };
 
-class Octree
+struct InternalNode
 {
 	
+};
+
+class OctreeNodeCreator
+{
+public:
+	std::unique_ptr<OctreeNodeBase> genNode(const std::array<Vec3, 2>& diagPoint);
+private:
 };
 
 #endif

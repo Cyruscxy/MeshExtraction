@@ -3,7 +3,25 @@
 #include <glm/fwd.hpp>
 
 
-std::array<Vec3, 8> OctreeNodeBase::genPoints()
+/*
+ * cell conner idx:
+ *
+ *             7---------------------6
+ *            /|                    /|
+ *           / |                   / |
+ *			/  |                  /  |
+ *         4---------------------5   |
+ *		   |   |                 |   |
+ *		   |   |                 |   |
+ *		   |   |                 |   |
+ *		   |   |                 |   |
+ *		   |   3-----------------|---2
+ *		   |  /                  |  / 
+ *		   | /                   | /
+ *		   |/                    |/
+ *		   0---------------------1
+ */
+std::array<Vec3, 8> OctreeNodeBase::genPoints(const std::array<Vec3, 2>& diagPoint)
 {
 	std::array<Vec3, 8> points;
 	for ( uint32_t z = 0; z < 2; ++z )
@@ -13,9 +31,9 @@ std::array<Vec3, 8> OctreeNodeBase::genPoints()
 			for ( uint32_t x = 0; x < 2; ++x )
 			{
 				uint32_t idx = x + y * 2 + z * 4;
-				points[idx].x = m_diagPoint[x].x;
-				points[idx].y = m_diagPoint[1 - y].y;
-				points[idx].z = m_diagPoint[z].z;
+				points[idx].x = diagPoint[x].x;
+				points[idx].y = diagPoint[1 - y].y;
+				points[idx].z = diagPoint[z].z;
 			}
 		}
 	}
@@ -32,4 +50,8 @@ void OctreeNodeBase::calculateCubeIdx(const std::function<Real(const Vec3&)>& sd
 	}
 }
 
+std::unique_ptr<OctreeNodeBase> OctreeNodeCreator::genNode(const std::array<Vec3, 2>& diagPoint)
+{
+	
+}
 
