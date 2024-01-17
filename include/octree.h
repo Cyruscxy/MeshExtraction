@@ -46,9 +46,10 @@ class OctreeNodeCreator
 public:
 	OctreeNodeCreator(const IsoSurface& surface): m_surface(surface) {}
 	std::unique_ptr<OctreeNodeBase> genNode(const std::array<Vec3, 2>& diagPoint);
+	std::unique_ptr<OctreeNodeBase> genRoot();
 private:
 	static std::array<Vec3, 8> genPointsForGrid(const std::array<Vec3, 2>& diagPoint);
-	int calculateCubeIdx(const std::array<Vec3, 8>& gridPoints, const std::function<Real(const Vec3&)>& sdf, std::array<Real, 8>& pointVal);
+	int calculateCubeIdx(const std::array<Vec3, 8>& gridPoints, std::array<Real, 8>& pointVal);
 
 	IsoSurface m_surface;
 };
