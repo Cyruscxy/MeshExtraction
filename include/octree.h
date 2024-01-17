@@ -6,6 +6,8 @@
 #include <array>
 #include <memory>
 
+#include "isosurface.h"
+
 enum OctreeNodeType
 {
 	INTERNAL_NODE = 0,
@@ -19,15 +21,9 @@ public:
 	virtual ~OctreeNodeBase() = default;
 	virtual OctreeNodeType getType() = 0;
 
-private:
-	// helper function
-	static std::array<Vec3, 8> genPoints(const std::array<Vec3, 2>&  diagPoint);
-	void calculateCubeIdx(const std::function<Real(const Vec3&)>& sdf);
-
-private:
 	std::array<Vec3, 2> m_diagPoint; // {vmin, vmax}
 	// std::array<Real, 8> m_pointVal;
-	char m_cubeIdx;
+	int m_cubeIdx;
 };
 
 struct LeafNode: public OctreeNodeBase
@@ -38,7 +34,6 @@ public:
 
 	OctreeNodeType getType() override { return LEAF_NODE; }
 
-private:
 };
 
 struct InternalNode
@@ -49,8 +44,13 @@ struct InternalNode
 class OctreeNodeCreator
 {
 public:
+	OctreeNodeCreator(const IsoSurface& surface): m_surface(surface) {}
 	std::unique_ptr<OctreeNodeBase> genNode(const std::array<Vec3, 2>& diagPoint);
 private:
+	static std::array<Vec3, 8> genPointsForGrid(const std::array<Vec3, 2>& diagPoint);
+	int calculateCubeIdx(const std::array<Vec3, 8>& gridPoints, const std::function<Real(const Vec3&)>& sdf, std::array<Real, 8>& pointVal);
+
+	IsoSurface m_surface;
 };
 
 #endif
